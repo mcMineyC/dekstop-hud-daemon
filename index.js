@@ -1,6 +1,16 @@
 import MprisPlayer2 from "./MprisPlayer2.js"; // Adjust the path as needed
 import { Server } from "socket.io";
 import http from 'http';
+import MdnsService from "./mdns.js";
+
+// Primary service that's started
+const service = {
+  name: "dekstop-hud.spotify",
+  port: 3000,
+}
+
+const mdns = new MdnsService(service);
+mdns.advertise();
 
 // Create an HTTP server (which will be used by Socket.io)
 const server = http.createServer();
@@ -12,7 +22,6 @@ const player = new MprisPlayer2('org.mpris.MediaPlayer2.spotify', '/org/mpris/Me
 // Function to start the player and handle server
 const startPlayer = async () => {
   await player.init();
-  await player.play();
   await player.getMetadata();
   console.log("Starting server");
 
@@ -41,6 +50,25 @@ const startPlayer = async () => {
     player.on('metadataChanged', metadataChanged);
     player.on('playbackStateChanged', playbackStateChanged);
     
+    socket.on("play", async () => await player.play());
+    socket.on("pause", async () => await player.pause());
+    socket.on("next", async () => await player.next());
+    socket.on("previous", async () => await player.previous());
+    socket.on("seek", async (positionMs) => await player.seek(positionMs));
+    socket.on("getMetadata", async () => await player.getMetadata());
+    socket.on("getPosition", async () => await player.getPosition());
+    socket.on("getPlaybackState", async () => await player.getPlaybackState());
+
+    socket.on("mdns:add", (service) => {
+      try{
+        mdns.addService(service);
+      }catch(e){
+        socket.emit("mdns:error", e);
+      }finally{
+        socket.emit("mdns:done", true);
+      }
+    })
+    
     // Clean up event listeners when client disconnects
     socket.on('disconnect', () => {
       player.off('positionChanged', positionChanged);
@@ -57,4 +85,3 @@ const startPlayer = async () => {
 
 // Start the player and server
 startPlayer();
-
