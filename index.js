@@ -1,50 +1,60 @@
 import MprisPlayer2 from "./MprisPlayer2.js"; // Adjust the path as needed
 import { Server } from "socket.io";
-const io = new Server({});
+import http from 'http';
 
+// Create an HTTP server (which will be used by Socket.io)
+const server = http.createServer();
+const io = new Server(server);
+
+// Initialize MPRIS Player
 const player = new MprisPlayer2('org.mpris.MediaPlayer2.spotify', '/org/mpris/MediaPlayer2');
 
-// Listen for position changes
-io.on("connection", (socket) => {
-  console.log('Client connected');
-  socket.emit('metadata', player.metadata);
-  const metadataChanged = (metadata) => {
-    console.log('Metadata updated:', metadata);
-    socket.emit('metadata', metadata);
-  };
-  const positionChanged = (posMs) => {
-    console.log('Position updated:', posMs);
-    socket.emit('position', posMs);
-  };
-  const playbackStateChanged = (state) => {
-    console.log('Playback state updated:', state);
-    socket.emit('playbackState', state);
-  };
-  //
-  //Listen for position changes
-  player.on('positionChanged', positionChanged);
-  // Listen for metadata changes
-  player.on('metadataChanged', metadataChanged);
-  // Listen for playback state changes
-  player.on('playbackStateChanged', playbackStateChanged);
-
-  socket.on('disconnect', () => {
-    player.off('positionChanged', positionChanged);
-    player.off('metadataChanged', metadataChanged);
-    player.off('playbackStateChanged', playbackStateChanged);
-  });
-});
-
-
-// Control playback
+// Function to start the player and handle server
+const startPlayer = async () => {
   await player.init();
   await player.play();
   await player.getMetadata();
-  console.log("Starting server")
-  io.listen(3000);
-  // Wait a moment, then seek to 30 seconds (30000 ms) and pause
-  //setTimeout(async () => {
-  //  await player.seek(30000);
-  //  await player.pause();
-  //}, 5000);
+  console.log("Starting server");
+
+  // Listen for WebSocket connections
+  io.on("connection", (socket) => {
+    console.log('Client connected');
+    socket.emit('metadata', player.metadata);
+    
+    const metadataChanged = (metadata) => {
+      console.log('Metadata updated:', metadata);
+      socket.emit('metadata', metadata);
+    };
+    
+    const positionChanged = (posMs) => {
+      console.log('Position updated:', posMs);
+      socket.emit('position', posMs);
+    };
+    
+    const playbackStateChanged = (state) => {
+      console.log('Playback state updated:', state);
+      socket.emit('playbackState', state.toString());
+    };
+    
+    // Register event listeners for player updates
+    player.on('positionChanged', positionChanged);
+    player.on('metadataChanged', metadataChanged);
+    player.on('playbackStateChanged', playbackStateChanged);
+    
+    // Clean up event listeners when client disconnects
+    socket.on('disconnect', () => {
+      player.off('positionChanged', positionChanged);
+      player.off('metadataChanged', metadataChanged);
+      player.off('playbackStateChanged', playbackStateChanged);
+    });
+  });
+
+  // Start the server to listen on port 3000
+  server.listen(3000, () => {
+    console.log("Server is running on http://localhost:3000");
+  });
+};
+
+// Start the player and server
+startPlayer();
 

@@ -155,12 +155,12 @@ class MprisPlayer2 extends EventEmitter {
   mapMetadata(metadata) {
     // This function maps the metadata to a more readable format.
     return {
-      title: metadata['xesam:title'].value,
-      album: metadata['xesam:album'].value,
-      artist: metadata['xesam:artist'].value.join(', '),
-      imageUrl: metadata['mpris:artUrl'].value,
-      length: metadata['mpris:length'].value,
-      trackId: metadata['mpris:trackid'].value.split("/")[4],
+      title: metadata['xesam:title'].value.toString(),
+      album: metadata['xesam:album'].value.toString(),
+      artist: metadata['xesam:artist'].value.join(', ').toString().slice(0,-2),
+      imageUrl: metadata['mpris:artUrl'].value.toString(),
+      length: {value: Number(metadata['mpris:length'].value) / 1000000, unit: 's'},
+      trackId: metadata['mpris:trackid'].value.split("/")[4].toString(),
     }
   }
 }
