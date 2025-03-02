@@ -9,6 +9,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "dbus-next": "^0.10.2"
+    "@spotify/web-api-ts-sdk": "^1.2.0",
+    "dbus-next": "^0.10.2",
+    "express": "^4.21.2"
   }
 }
