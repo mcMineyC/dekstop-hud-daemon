@@ -23,12 +23,16 @@ const player = new MprisPlayer2('org.mpris.MediaPlayer2.spotify', '/org/mpris/Me
 const startPlayer = async () => {
   await player.init();
   await player.getMetadata();
+  await player.getPlaybackStatus();
+  await player.getPosition();
   console.log("Starting server");
 
   // Listen for WebSocket connections
   io.on("connection", (socket) => {
     console.log('Client connected');
     socket.emit('metadata', player.metadata);
+    socket.emit('playbackState', player.playbackStatus);
+    socket.emit('position', player.position);
     
     const metadataChanged = (metadata) => {
       console.log('Metadata updated:', metadata);

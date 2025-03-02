@@ -36,8 +36,8 @@ class MprisPlayer2 extends EventEmitter {
           // Update position
           if (changed.Position) {
             // MPRIS provides Position in microseconds, so convert to milliseconds.
-            const positionMs = Number(changed.Position.value) / 1000;
-            this.emit('positionChanged', positionMs);
+            this.positionMs = Number(changed.Position.value) / 1000;
+            this.emit('positionChanged', this.positionMs);
           }
           // Update metadata if changed
           if (changed.Metadata) {
@@ -117,6 +117,32 @@ class MprisPlayer2 extends EventEmitter {
       return this.metadata;
     } catch (err) {
       console.error('GetMetadata error:', err);
+    }
+  }
+
+  async getPlaybackStatus() {
+    if (!this._initialized) throw Error('Player not initialized.');
+    try {
+      let playbackStatus = await this.properties.Get(MPRIS_IFACE, 'PlaybackStatus');
+      this.playbackStatus = playbackStatus.value;
+      return this.playbackStatus;
+    } catch (err) {
+      console.error('GetPlaybackStatus error:', err);
+    }
+  }
+
+  async getPosition() {
+    if (!this._initialized) throw Error('Player not initialized.');
+    try {
+      let position = await this.properties.Get(MPRIS_IFACE, 'Position');
+      if (position.value.toString() == "null") this.positionMs = 0;
+      else {
+        const positionMs = Number(position.value) / 1000;
+        this.positionMs = positionMs;
+      }
+      return this.positionMs;
+    } catch (err) {
+      console.error('GetPosition error:', err);
     }
   }
 
