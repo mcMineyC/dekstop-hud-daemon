@@ -1,5 +1,9 @@
-const dbus = require('dbus-next');
-const { EventEmitter } = require('events');
+import dbus from "dbus-next";
+import { EventEmitter } from 'events';
+
+const MPRIS_IFACE = 'org.mpris.MediaPlayer2.Player';
+const MPRIS_PATH = '/org/mpris/MediaPlayer2';
+const PROPERTIES_IFACE = 'org.freedesktop.DBus.Properties';
 
 class MprisPlayer2 extends EventEmitter {
   /**
@@ -14,7 +18,7 @@ class MprisPlayer2 extends EventEmitter {
     this._initialized = false;
     this.metadata = {};         // Store the current metadata here.
     this.playbackStatus = '';    // Store the current playback state.
-    this.init();
+    //this.init(); // require async init
   }
 
   async init() {
@@ -28,7 +32,7 @@ class MprisPlayer2 extends EventEmitter {
       // Listen for property changes; specifically, watch the "Position", "Metadata" and "PlaybackStatus" properties
       this.properties.on('PropertiesChanged', (iface, changed, invalidated) => {
         if (iface === 'org.mpris.MediaPlayer2.Player') {
-          console.log(changed);
+          //console.log(changed);
           // Update position
           if (changed.Position) {
             // MPRIS provides Position in microseconds, so convert to milliseconds.
@@ -38,10 +42,7 @@ class MprisPlayer2 extends EventEmitter {
           // Update metadata if changed
           if (changed.Metadata) {
             // The Metadata property is a dictionary.
-            this.metadata = changed.Metadata.value;
-            let metadataObject = {
-              title:
-            }
+            this.metadata = this.mapMetadata(changed.Metadata.value);
             this.emit('metadataChanged', this.metadata);
           }
           // Update playback status if changed
@@ -73,7 +74,7 @@ class MprisPlayer2 extends EventEmitter {
   }
 
   async play() {
-    if (!this._initialized) return;
+    if (!this._initialized) throw Error('Player not initialized.');
     try {
       await this.player.Play();
     } catch (err) {
@@ -82,7 +83,7 @@ class MprisPlayer2 extends EventEmitter {
   }
 
   async pause() {
-    if (!this._initialized) return;
+    if (!this._initialized) throw Error('Player not initialized.');
     try {
       await this.player.Pause();
     } catch (err) {
@@ -91,7 +92,7 @@ class MprisPlayer2 extends EventEmitter {
   }
 
   async next() {
-    if (!this._initialized) return;
+    if (!this._initialized) throw Error('Player not initialized.');
     try {
       await this.player.Next();
     } catch (err) {
@@ -100,11 +101,22 @@ class MprisPlayer2 extends EventEmitter {
   }
 
   async previous() {
-    if (!this._initialized) return;
+    if (!this._initialized) throw Error('Player not initialized.');
     try {
       await this.player.Previous();
     } catch (err) {
       console.error('Previous error:', err);
+    }
+  }
+
+  async getMetadata() {
+    if (!this._initialized) throw Error('Player not initialized.');
+    try {
+      let metadata = await this.properties.Get(MPRIS_IFACE, 'Metadata');
+      this.metadata = this.mapMetadata(metadata.value);
+      return this.metadata;
+    } catch (err) {
+      console.error('GetMetadata error:', err);
     }
   }
 
@@ -113,7 +125,7 @@ class MprisPlayer2 extends EventEmitter {
    * Internally, this converts the value to microseconds and calls the SetPosition method.
    */
   async seek(positionMs) {
-    if (!this._initialized) return;
+    if (!this._initialized) throw Error('Player not initialized.');
     try {
       // Convert from milliseconds to microseconds.
       const positionMicro = BigInt(positionMs * 1000);
@@ -139,7 +151,18 @@ class MprisPlayer2 extends EventEmitter {
       console.error('Seek error:', err);
     }
   }
+
+  mapMetadata(metadata) {
+    // This function maps the metadata to a more readable format.
+    return {
+      title: metadata['xesam:title'].value,
+      album: metadata['xesam:album'].value,
+      artist: metadata['xesam:artist'].value.join(', '),
+      imageUrl: metadata['mpris:artUrl'].value,
+      length: metadata['mpris:length'].value,
+      trackId: metadata['mpris:trackid'].value.split("/")[4],
+    }
+  }
 }
 
-module.exports = MprisPlayer2;
-
+export default MprisPlayer2;
