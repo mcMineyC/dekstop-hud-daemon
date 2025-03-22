@@ -70,6 +70,7 @@ class MprisPlayer2 extends EventEmitter {
       console.log(`MprisPlayer2 initialized for service: ${this.serviceName}`);
     } catch (err) {
       console.error('Failed to initialize MprisPlayer2:', err);
+      exit(1);
     }
   }
 
@@ -138,9 +139,9 @@ class MprisPlayer2 extends EventEmitter {
       if (position.value.toString() == "null") this.positionMs = 0;
       else {
         const positionMs = Number(position.value) / 1000;
-        this.positionMs = positionMs;
+        this.position = positionMs;
       }
-      return this.positionMs;
+      return this.position;
     } catch (err) {
       console.error('GetPosition error:', err);
     }

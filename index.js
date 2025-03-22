@@ -5,7 +5,8 @@ import MdnsService from "./mdns.js";
 
 // Primary service that's started
 const service = {
-  name: "dekstop-hud.spotify",
+  name: "dekstop-hud.player",
+  friendlyName: "Spotify on jedi-swift-object",
   port: 3000,
 }
 
@@ -82,8 +83,8 @@ const startPlayer = async () => {
   });
 
   // Start the server to listen on port 3000
-  server.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
+  server.listen(service.port, () => {
+    console.log("Server is running on http://localhost:"+service.port);
   });
 };
 

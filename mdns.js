@@ -27,13 +27,13 @@ class MdnsService {
     }
     var services = this.services;
     var serviceDefinitionToResponse = this.serviceDefinitionToResponse;
-    console.log(`Advertising service '${this.name}._http._tcp.local' on ${this.ip}:${this.port}...`);
+    console.log(`Advertising service '${this.name}._tcp.local' on ${this.ip}:${this.port}...`);
     mdns.on('query', function(query) {
-      if (query.questions.some(q => services.filter((x) => q.name == `${x.name}._http._tcp.local`))) {
+      if (query.questions.some(q => services.filter((x) => q.name == `${x.name}._tcp.local`).length > 0)) {
         console.log('Received a query');
         // Respond to the query with service details
         let answers = [];
-        services.filter((x) => query.questions[0].name == `${x.name}._http._tcp.local`).forEach(service => {
+        services.filter((x) => query.questions[0].name == `${x.name}._tcp.local`).forEach(service => {
           let answer = serviceDefinitionToResponse(service);
           answers = answers.concat(answer);
         });
@@ -59,13 +59,13 @@ class MdnsService {
     console.log(definition);
     return [
       {
-        name: `${definition.name}._http._tcp.local`,
+        name: `${definition.name}._tcp.local`,
         type: 'PTR',
         ttl: 120,
-        data: `${definition.name}._http._tcp.local`,
+        data: `${definition.name}._tcp.local`,
       },
       {
-        name: `${definition.name}._http._tcp.local`,
+        name: `${definition.name}._tcp.local`,
         type: 'SRV',
         ttl: 120,
         data: {
@@ -82,10 +82,11 @@ class MdnsService {
         data: definition.ip,
       },
       {
-        name: `${definition.name}._http._tcp.local`,
+        name: `${definition.name}._tcp.local`,
         type: 'TXT',  // TXT record with metadata about the service
         ttl: 120,
-        data: ['version=1.0', 'description=A cool HTTP service'],
+        //data: ['ip='+definition.ip, 'port='+definition.port, 'description='+definition.friendlyName],
+        data: definition.friendlyName,
       },
     ];
   }
