@@ -1,5 +1,5 @@
-import os from 'os';
-import mdnsLib from 'multicast-dns';
+import os from "os";
+import mdnsLib from "multicast-dns";
 const mdns = mdnsLib();
 class MdnsService {
   //constructor(name, port) {
@@ -14,7 +14,7 @@ class MdnsService {
   //    }
   //  ]
   //}
-  constructor(service){
+  constructor(service) {
     this.name = service.name;
     this.port = service.port;
     this.ip = getLocalIP();
@@ -23,53 +23,66 @@ class MdnsService {
   }
   advertise() {
     if (!this.ip) {
-      throw new Error('Unable to find a local IP address.');
+      throw new Error("Unable to find a local IP address.");
     }
     var services = this.services;
     var serviceDefinitionToResponse = this.serviceDefinitionToResponse;
-    console.log(`Advertising service '${this.name}._tcp.local' on ${this.ip}:${this.port}...`);
-    mdns.on('query', function(query) {
-      if (query.questions.some(q => services.filter((x) => q.name == `${x.name}._tcp.local`).length > 0)) {
-        console.log('Received a query');
+    console.log(
+      `Advertising service '${this.name}._tcp.local' on ${this.ip}:${this.port}...`,
+    );
+    mdns.on("query", function (query) {
+      if (
+        query.questions.some(
+          (q) =>
+            services.filter((x) => q.name == `${x.name}._tcp.local`).length > 0,
+        )
+      ) {
+        console.log("Received a query");
         // Respond to the query with service details
         let answers = [];
-        services.filter((x) => query.questions[0].name == `${x.name}._tcp.local`).forEach(service => {
-          let answer = serviceDefinitionToResponse(service);
-          answers = answers.concat(answer);
-        });
+        services
+          .filter((x) => query.questions[0].name == `${x.name}._tcp.local`)
+          .forEach((service) => {
+            let answer = serviceDefinitionToResponse(service);
+            answers = answers.concat(answer);
+          });
         mdns.respond({
-          answers: answers
+          answers: answers,
         });
         console.log(JSON.stringify(answers, null, 2));
-        console.log(`Responded with service details for ${this.name} at ${this.ip}:${this.port}`);
+        console.log(
+          `Responded with service details for ${this.name} at ${this.ip}:${this.port}`,
+        );
       }
     });
   }
   addService(service) {
     if (!service.name || !service.port) {
-      throw new Error('Service must have a name and port.');
+      throw new Error("Service must have a name and port.");
     }
     if (!service.ip) {
       service.ip = this.ip;
     }
     this.services.push(service);
-    console.log(`Added service ${service.name} at ${service.ip}:${service.port}`);
+    console.log(
+      `Added service ${service.name} at ${service.ip}:${service.port}`,
+    );
   }
-  serviceDefinitionToResponse(definition){
+  serviceDefinitionToResponse(definition) {
     console.log(definition);
     return [
       {
         name: `${definition.name}._tcp.local`,
-        type: 'PTR',
+        type: "PTR",
         ttl: 120,
         data: `${definition.name}._tcp.local`,
       },
       {
         name: `${definition.name}._tcp.local`,
-        type: 'SRV',
+        type: "SRV",
         ttl: 120,
         data: {
-          target: definition.ip,  // Use the local IP address
+          target: definition.ip, // Use the local IP address
           port: definition.port, // Port where the service is running
           weight: 0,
           priority: 10,
@@ -77,18 +90,25 @@ class MdnsService {
       },
       {
         name: definition.ip,
-        type: 'A',  // A record (IPv4 address)
+        type: "A", // A record (IPv4 address)
         ttl: 120,
         data: definition.ip,
       },
       {
         name: `${definition.name}._tcp.local`,
-        type: 'TXT',  // TXT record with metadata about the service
+        type: "TXT", // TXT record with metadata about the service
         ttl: 120,
-        //data: ['ip='+definition.ip, 'port='+definition.port, 'description='+definition.friendlyName],
-        data: definition.friendlyName,
+        data: [
+          `ip=${definition.ip}`,
+          `port=${definition.port}`,
+          `description=${definition.friendlyName || "No description"}`,
+        ],
       },
     ];
+  }
+
+  stop() {
+    mdns.destroy();
   }
 }
 
@@ -99,7 +119,7 @@ function getLocalIP() {
   // Loop through network interfaces to find the first non-internal IPv4 address
   for (const interfaceName in networkInterfaces) {
     for (const interfaceInfo of networkInterfaces[interfaceName]) {
-      if (interfaceInfo.family === 'IPv4' && !interfaceInfo.internal) {
+      if (interfaceInfo.family === "IPv4" && !interfaceInfo.internal) {
         localIP = interfaceInfo.address;
         break;
       }

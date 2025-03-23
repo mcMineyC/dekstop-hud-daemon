@@ -63,6 +63,7 @@ const startPlayer = async () => {
     socket.on("getMetadata", async () => await player.getMetadata());
     socket.on("getPosition", async () => await player.getPosition());
     socket.on("getPlaybackState", async () => await player.getPlaybackState());
+    socket.on("friendlyName", () => socket.emit("friendlyName", service.friendlyName));
 
     socket.on("mdns:add", (service) => {
       try{
@@ -84,7 +85,7 @@ const startPlayer = async () => {
 
   // Start the server to listen on port 3000
   server.listen(service.port, () => {
-    console.log("Server is running on http://localhost:"+service.port);
+    console.log("Server is running on http://0.0.0.0:"+service.port);
   });
 };
 

@@ -63,14 +63,14 @@ class MprisPlayer2 extends EventEmitter {
         } catch (err) {
           console.error('Error polling position:', err);
         }
-      }, 1000);
+      }, 500);
 
 
       this._initialized = true;
       console.log(`MprisPlayer2 initialized for service: ${this.serviceName}`);
     } catch (err) {
       console.error('Failed to initialize MprisPlayer2:', err);
-      exit(1);
+      setTimeout(this.init, 1500);
     }
   }
 
@@ -184,7 +184,7 @@ class MprisPlayer2 extends EventEmitter {
     return {
       title: metadata['xesam:title'].value.toString(),
       album: metadata['xesam:album'].value.toString(),
-      artist: metadata['xesam:artist'].value.join(', ').toString().slice(0,-2),
+      artist: metadata['xesam:artist'].value.join(', ').toString(),
       imageUrl: metadata['mpris:artUrl'].value.toString(),
       length: {value: Number(metadata['mpris:length'].value) / 1000000, unit: 's'},
       trackId: metadata['mpris:trackid'].value.split("/")[4].toString(),
