@@ -1,0 +1,20 @@
+{
+  "name": "dekstop-daemon-node",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "@spotify/web-api-ts-sdk": "^1.2.0",
+    "dbus-next": "^0.10.2",
+    "express": "^4.21.2",
+    "multicast-dns": "^7.2.5",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.1"
+  }
+}
