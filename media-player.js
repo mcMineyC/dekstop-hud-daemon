@@ -12,7 +12,7 @@ var playerName = integration.params.playerName; // Used both for MPRIS and servi
 var friendlyName = playerName.charAt(0).toUpperCase() + playerName.slice(1)
 var hostname = integration.params.hostname;
 const service = {
-  name: "dekstop-hud.player",
+  name: "player.dekstop-hud",
   friendlyName: `${friendlyName} on ${hostname}`,
   port: integration.params.port,
 }
